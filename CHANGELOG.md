@@ -3,6 +3,9 @@
 ## Unreleased
 
 - `simlane --version` and a `VERSION` file.
+- `simlane setup [--hooks]` links the Claude Code skill and registers the hooks; replaces
+  `scripts/install-claude-hooks.sh`. Paths survive `brew upgrade`.
+- Hook registration no longer removes other tools' `claude-hook` entries.
 
 ## 0.1.0 — 2026-10-03
 
