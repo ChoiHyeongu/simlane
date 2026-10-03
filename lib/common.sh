@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Shared helpers: exit codes, logging, global config. bash 3.2 compatible. Sourced only (no set -e here).
+# shellcheck disable=SC2034  # the SIMLANE_EXIT_* codes are used by the files that source this one
 
 SIMLANE_EXIT_MAIN=2        # running on the main checkout (no lane there)
 SIMLANE_EXIT_EXHAUSTED=3   # all lanes in use

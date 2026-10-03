@@ -1,0 +1,29 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install tools
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+        run: brew install bats-core shellcheck actionlint jq
+      - name: shellcheck
+        run: shellcheck bin/simlane lib/*.sh lib/cmd/*.sh scripts/*.sh
+      - name: actionlint
+        run: actionlint
+      - name: bats on the stock /bin/bash 3.2
+        run: |
+          export PATH="/bin:/usr/bin:$PATH"
+          bash --version | head -1 | grep -q 'version 3\.2' || { echo "expected bash 3.2, got: $(bash --version | head -1)"; exit 1; }
+          bats tests/
