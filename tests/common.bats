@@ -51,3 +51,16 @@ setup() { setup_env; source_libs; }
   run assert_not_contains hello ell;  [ "$status" -eq 1 ]
   run assert_endswith hello lo;       [ "$status" -eq 0 ]
 }
+
+@test "stable_home: a Homebrew Cellar path maps to the version-independent opt path" {
+  source_libs
+  [ "$(simlane::stable_home /opt/homebrew/Cellar/simlane/0.2.0/libexec)" = "/opt/homebrew/opt/simlane/libexec" ]
+  [ "$(simlane::stable_home /usr/local/Cellar/simlane/1.10.3_1/libexec)" = "/usr/local/opt/simlane/libexec" ]
+}
+
+@test "stable_home: a git clone path is returned unchanged, and SIMLANE_HOME is the default" {
+  source_libs
+  [ "$(simlane::stable_home /Users/x/.local/share/simlane)" = "/Users/x/.local/share/simlane" ]
+  [ "$(simlane::stable_home /tmp/Cellar/other/1.0/libexec)" = "/tmp/Cellar/other/1.0/libexec" ]
+  [ "$(SIMLANE_HOME=/a/Cellar/simlane/0.3.0/libexec simlane::stable_home)" = "/a/opt/simlane/libexec" ]
+}

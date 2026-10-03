@@ -40,3 +40,13 @@ simlane::config_json() {   # defaults deep-merged with ~/.config/simlane/config.
 simlane::config_get() {   # JQ_PATH → raw value
   simlane::config_json | jq -r "$1"
 }
+
+simlane::stable_home() {   # [PATH] → the install root that outside files (skill link, hook command) may point at
+  # Homebrew resolves bin/simlane to <prefix>/Cellar/simlane/<version>/libexec, which `brew cleanup` deletes after an
+  # upgrade; <prefix>/opt/simlane always points at the current version. No `brew` call: hooks run on every event.
+  local h=${1:-$SIMLANE_HOME}
+  case "$h" in
+    */Cellar/simlane/*/libexec) printf '%s/opt/simlane/libexec\n' "${h%%/Cellar/simlane/*}" ;;
+    *) printf '%s\n' "$h" ;;
+  esac
+}
