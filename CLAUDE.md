@@ -26,7 +26,7 @@ facts that were verified on real devices. `docs/backlog.md` lists known gaps.
 - **bash 3.2 compatible** (macOS stock `/bin/bash`): no `declare -A`, `mapfile`, `${var,,}`, `local -n`; empty arrays expand
   as `${arr[@]+"${arr[@]}"}`. `bin/simlane` runs with `set -euo pipefail`; `lib/*.sh` are sourced and must not set it.
 - Function namespace `simlane::`, subcommands `cmd_*`. Messages, comments, test names: English. Conversation with the
-  maintainer (@able) is in Korean.
+  maintainer is in Korean.
 - The ordering in `cmd_up` is the product contract: **Metro ready → bundle address → app**. Never launch the app before
   Metro answers (`/status` → `packager-status:running`) — React Native silently falls back to port 8081 otherwise.
 - `simlane` only creates/boots/shuts down/writes defaults on simulators named `Simlane N`. Never touch other devices.
