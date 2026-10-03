@@ -45,7 +45,7 @@ bats tests/              # whole suite; a single file: bats tests/metro.bats
 - **Assertions must be function helpers** from `tests/test_helper.bash` (`assert_contains`, `assert_not_contains`,
   `assert_endswith`, `assert_fails`). Under bash 3.2 a failing `[[ ]]` on a non-final line and `! cmd` on any line do **not**
   fail a bats test. `tests/common.bats` has a meta-test that pins this.
-- `tests/rename_guard.bats` fails if any legacy `rn-slot` identifier reappears.
+- `tests/rename_guard.bats` fails if any identifier from the project's pre-release name reappears (the test file lists the forbidden tokens).
 - The fakes deliberately reproduce real behaviour: tmux `-t` prefix matching (always use `=name`), ports lingering after
   `kill-session` (`FAKE_METRO_LINGER_SEC`), `FAKE_METRO_NEVER_READY`, `FAKE_BUILD_EXIT`. If you change a fake, check
   `docs/design.md` "Things the test fakes reproduce on purpose".
