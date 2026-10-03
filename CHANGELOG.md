@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `simlane --version` and a `VERSION` file.
+
 ## 0.1.0 — 2026-10-03
 
 First public release.

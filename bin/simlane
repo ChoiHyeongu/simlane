@@ -30,6 +30,8 @@ usage: simlane <command> [args]
   gc                 clean up lanes whose worktree directory is gone
   init               write a .simlane.json skeleton
   claude-hook        Claude Code hook entry point (reads hook JSON on stdin)
+  setup [--hooks]    link the Claude Code skill; --hooks also registers the session hooks
+  version, --version print the installed version
 
 exit codes: 2 main checkout · 3 all lanes in use · 4 Metro not ready · 5 port held by a foreign process
 USAGE
@@ -48,6 +50,7 @@ main() {
     gc)          cmd_gc "$@" ;;
     init)        cmd_init "$@" ;;
     claude-hook) cmd_claude_hook "$@" ;;
+    version|--version|-V) cmd_version "$@" ;;
     help|-h|--help) usage ;;
     *) usage >&2; exit 1 ;;
   esac
