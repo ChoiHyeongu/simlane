@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# fake xcrun: only `simctl` is emulated. State lives in $FAKE_STATE/devices.json ([{udid,name,state}]).
+set -euo pipefail
+S=${FAKE_STATE:?}; DEV="$S/devices.json"
+[ -f "$DEV" ] || echo '[]' > "$DEV"
+echo "xcrun $*" >> "$S/calls.log"
+[ "${1:-}" = simctl ] || { echo "fake xcrun: unsupported ${1:-}" >&2; exit 1; }
+shift
+case "$1 ${2:-}" in
+  "list devices")
+    jq '{devices:{"com.apple.CoreSimulator.SimRuntime.iOS-26-5": [.[] | . + {isAvailable:true}]}}' "$DEV" ;;
+  "list devicetypes")
+    echo '{"devicetypes":[{"name":"iPhone 17 Pro","identifier":"com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro"}]}' ;;
+  "list runtimes")
+    echo '{"runtimes":[{"identifier":"com.apple.CoreSimulator.SimRuntime.iOS-18-2","version":"18.2","isAvailable":true,"platform":"iOS"},{"identifier":"com.apple.CoreSimulator.SimRuntime.iOS-26-5","version":"26.5","isAvailable":true,"platform":"iOS"}]}' ;;
+  "create "*)
+    n=$(jq length "$DEV"); u="FAKE-UDID-$((n+1))"
+    jq --arg u "$u" --arg n "$2" '. + [{udid:$u,name:$n,state:"Shutdown"}]' "$DEV" > "$DEV.tmp" && mv "$DEV.tmp" "$DEV"
+    echo "$u" ;;
+  "boot "*)
+    jq --arg u "$2" 'map(if .udid==$u then .state="Booted" else . end)' "$DEV" > "$DEV.tmp" && mv "$DEV.tmp" "$DEV" ;;
+  "bootstatus "*) : ;;
+  "shutdown "*)
+    jq --arg u "$2" 'map(if .udid==$u then .state="Shutdown" else . end)' "$DEV" > "$DEV.tmp" && mv "$DEV.tmp" "$DEV" ;;
+  "spawn "*)
+    shift 2; echo "$*" >> "$S/defaults.log" ;;
+  *) echo "fake xcrun: unsupported simctl $*" >&2; exit 1 ;;
+esac

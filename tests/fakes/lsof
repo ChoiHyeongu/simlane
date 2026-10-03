@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# fake lsof: a port is listening when listen-<port> or metro-<port> exists, or while a killed Metro still lingers
+S=${FAKE_STATE:?}; port=""
+for a in "$@"; do case "$a" in -iTCP:*) port=${a#-iTCP:} ;; esac; done
+echo "lsof $*" >> "$S/calls.log"
+listening=0
+if [ -n "$port" ]; then
+  [ -f "$S/listen-$port" ] || [ -f "$S/metro-$port" ] && listening=1
+  if [ -f "$S/metro-$port.until" ] && [ "$(date +%s)" -lt "$(cat "$S/metro-$port.until")" ]; then listening=1; fi
+fi
+if [ "$listening" -eq 1 ]; then echo "fakeproc 4242 user TCP *:$port (LISTEN)"; exit 0; fi
+exit 1

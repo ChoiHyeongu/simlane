@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+echo "fake-build $* cwd=$PWD lang=${LANG:-}" >> "${FAKE_STATE:?}/calls.log"
+exit "${FAKE_BUILD_EXIT:-0}"

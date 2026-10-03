@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# fake curl: /status answers running when a metro-<port> marker exists or the port is still lingering after a kill
+S=${FAKE_STATE:?}; url=""
+for a in "$@"; do case "$a" in http*) url=$a ;; esac; done
+echo "curl $url" >> "$S/calls.log"
+port=$(printf '%s' "$url" | sed -n 's#http://localhost:\([0-9]*\)/status.*#\1#p')
+if [ -n "$port" ]; then
+  if [ -f "$S/metro-$port" ]; then echo "packager-status:running"; exit 0; fi
+  if [ -f "$S/metro-$port.until" ]; then
+    if [ "$(date +%s)" -lt "$(cat "$S/metro-$port.until")" ]; then echo "packager-status:running"; exit 0; fi
+    rm -f "$S/metro-$port.until"
+  fi
+fi
+exit 7

@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# simlane — one iOS simulator + Metro "lane" per git worktree. See README.md and docs/design.md.
+set -euo pipefail
+
+SIMLANE_HOME=$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd -P)
+export SIMLANE_HOME
+
+for _f in common lock worktree registry simulator metro deps app; do
+  [ -f "$SIMLANE_HOME/lib/$_f.sh" ] && . "$SIMLANE_HOME/lib/$_f.sh"
+done
+for _f in "$SIMLANE_HOME"/lib/cmd/*.sh; do
+  [ -f "$_f" ] && . "$_f"
+done
+unset _f
+
+simlane::require_cmd jq
+
+usage() {
+  cat <<'USAGE'
+simlane — one iOS simulator + Metro lane per git worktree
+
+usage: simlane <command> [args]
+
+  prepare            link/install dependencies only (no simulator, no Metro)
+  up [--no-app]      assign a lane → boot simulator → Metro → bundle address → build/install/launch the app
+  down [N|--all]     release a lane (kill Metro, delete the bundle address, shut the simulator down)
+  status             one row per lane: port, simulator, Metro, worktree (live probes)
+  env [--json]       export SIMLANE_* for the current worktree (main checkout: SIMLANE_RESERVED_UDIDS only)
+  metro logs|restart tail the Metro log / restart Metro with --reset-cache
+  gc                 clean up lanes whose worktree directory is gone
+  init               write a .simlane.json skeleton
+  claude-hook        Claude Code hook entry point (reads hook JSON on stdin)
+
+exit codes: 2 main checkout · 3 all lanes in use · 4 Metro not ready · 5 port held by a foreign process
+USAGE
+}
+
+main() {
+  local sub=${1:-help}
+  [ $# -gt 0 ] && shift
+  case "$sub" in
+    prepare)     cmd_prepare "$@" ;;
+    up)          cmd_up "$@" ;;
+    down)        cmd_down "$@" ;;
+    status)      cmd_status "$@" ;;
+    env)         cmd_env "$@" ;;
+    metro)       cmd_metro "$@" ;;
+    gc)          cmd_gc "$@" ;;
+    init)        cmd_init "$@" ;;
+    claude-hook) cmd_claude_hook "$@" ;;
+    help|-h|--help) usage ;;
+    *) usage >&2; exit 1 ;;
+  esac
+}
+
+main "$@"

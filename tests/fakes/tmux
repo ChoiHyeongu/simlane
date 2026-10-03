@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# fake tmux: a session is a file $FAKE_STATE/tmux-<name> whose content is the command. new-session reads --port N from the
+# command and creates a metro-N marker. Like real tmux, -t matches by prefix unless the target starts with "=".
+# kill-session keeps the port alive for FAKE_METRO_LINGER_SEC seconds when set (real kill-session only sends SIGHUP).
+set -euo pipefail
+S=${FAKE_STATE:?}
+echo "tmux $*" >> "$S/calls.log"
+resolve() {   # -t target → session name (empty when none matches)
+  local t=$1
+  if [ "${t#=}" != "$t" ]; then
+    [ -f "$S/tmux-${t#=}" ] && printf '%s\n' "${t#=}" || true
+  else
+    ls "$S" 2>/dev/null | sed -n 's/^tmux-//p' | grep "^$t" | head -n1 || true
+  fi
+}
+case "${1:-}" in
+  has-session) [ -n "$(resolve "$3")" ] ;;
+  new-session)
+    shift; name=""
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        -s) name=$2; shift 2 ;;
+        -c|-e) echo "$1 $2" >> "$S/tmux-args.log"; shift 2 ;;
+        -d) shift ;;
+        *) break ;;
+      esac
+    done
+    printf '%s\n' "$*" > "$S/tmux-$name"
+    if [ -z "${FAKE_METRO_NEVER_READY:-}" ]; then
+      port=$(printf '%s' "$*" | sed -n 's/.*--port \([0-9]*\).*/\1/p')
+      [ -n "$port" ] && touch "$S/metro-$port"
+    fi ;;
+  kill-session)
+    name=$(resolve "$3"); [ -n "$name" ] || { echo "can't find session: $3" >&2; exit 1; }
+    f="$S/tmux-$name"
+    port=$(sed -n 's/.*--port \([0-9]*\).*/\1/p' "$f" 2>/dev/null || true)
+    rm -f "$f"
+    if [ -n "$port" ]; then
+      rm -f "$S/metro-$port"
+      [ -n "${FAKE_METRO_LINGER_SEC:-}" ] && echo $(( $(date +%s) + FAKE_METRO_LINGER_SEC )) > "$S/metro-$port.until"
+    fi ;;
+  capture-pane) echo "fake metro log line" ;;
+  ls) ls "$S" | sed -n 's/^tmux-//p' ;;
+  *) echo "fake tmux: unsupported $*" >&2; exit 1 ;;
+esac
+exit 0
