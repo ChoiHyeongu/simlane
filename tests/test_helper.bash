@@ -42,6 +42,15 @@ make_worktree() {   # REPO NAME → prints the worktree path
   printf '%s\n' "$1/.claude/worktrees/$2"
 }
 
+make_brew_prefix() {   # DIR → a fake Homebrew prefix with simlane 0.2.0 installed the way the formula installs it
+  local p=$1 c="$1/Cellar/simlane/0.2.0"
+  mkdir -p "$c/libexec" "$c/bin" "$p/opt" "$p/bin"
+  cp -R "$SIMLANE_ROOT/bin" "$SIMLANE_ROOT/lib" "$SIMLANE_ROOT/skills" "$SIMLANE_ROOT/VERSION" "$c/libexec/"
+  ln -s ../libexec/bin/simlane "$c/bin/simlane"
+  ln -s ../Cellar/simlane/0.2.0 "$p/opt/simlane"
+  ln -s ../Cellar/simlane/0.2.0/bin/simlane "$p/bin/simlane"
+}
+
 # Under bash 3.2 (+bats) `set -e` ignores a failing [[ ]] on a non-final line, and `! cmd` is never an errexit trigger
 # in any bash. A non-zero return from a function does trigger it, so assertions go through these helpers.
 assert_contains()     { case "$1" in *"$2"*) return 0 ;; esac; echo "assert_contains failed: '$2' not in '$1'" >&2; return 1; }

@@ -50,6 +50,7 @@ main() {
     gc)          cmd_gc "$@" ;;
     init)        cmd_init "$@" ;;
     claude-hook) cmd_claude_hook "$@" ;;
+    setup)       cmd_setup "$@" ;;
     version|--version|-V) cmd_version "$@" ;;
     help|-h|--help) usage ;;
     *) usage >&2; exit 1 ;;
