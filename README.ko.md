@@ -30,10 +30,15 @@ macOS 12.3+, Xcode(`xcrun simctl`), `jq`, `tmux` ≥ 3.2, `git` ≥ 2.31. 기본
 ## 설치
 
 ```sh
-git clone https://github.com/ChoiHyeongu/simlane.git ~/.local/share/simlane
-~/.local/share/simlane/scripts/install.sh              # ~/bin/simlane, ~/.claude/skills/simlane
-~/.local/share/simlane/scripts/install-claude-hooks.sh # ~/.claude/settings.json 훅 (Claude Code용, 선택)
+brew install choihyeongu/tap/simlane
+simlane setup --hooks   # Claude Code 스킬 링크 + 훅 등록 (스킬만 원하면 --hooks 생략)
 ```
+
+`brew upgrade simlane`으로 업그레이드합니다. 스킬 링크와 훅은 Homebrew의 `opt/simlane` 경로를 가리키므로 업그레이드 후에도
+그대로 동작합니다. 제거: `brew uninstall simlane`, `rm ~/.claude/skills/simlane`, `~/.claude/settings.json`에서
+`simlane claude-hook` 항목 삭제(남겨 둬도 아무 일도 하지 않습니다).
+
+simlane 자체를 개발하려면 [CONTRIBUTING.md](CONTRIBUTING.md)를 보세요.
 
 ## 사용
 
@@ -103,7 +108,7 @@ config.resolver = { ...config.resolver, blockList: exclusionList([nestedWorktree
 
 ## Claude Code 통합
 
-`scripts/install-claude-hooks.sh`가 `SessionStart`·`CwdChanged`·`FileChanged`에 `simlane claude-hook`을 등록합니다. 훅은
+`simlane setup --hooks`가 `SessionStart`·`CwdChanged`·`FileChanged`에 `simlane claude-hook`을 등록합니다. 훅은
 `simlane env`를 `CLAUDE_ENV_FILE`에 덧붙이고 레인 레지스트리를 가리키는 `hookSpecificOutput.watchPaths`를 돌려줘,
 세션 중 `simlane up`이 실행되면 변수가 갱신됩니다. `skills/simlane/`의 스킬은 provisioning(simlane)과 interaction(argent)의
 경계와 금지 사항을 에이전트에게 알려줍니다.

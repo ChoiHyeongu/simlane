@@ -16,9 +16,10 @@ facts that were verified on real devices. `docs/backlog.md` lists known gaps.
 | `lib/simulator.sh` | `xcrun simctl` wrappers — only ever touches devices named `Simlane N` |
 | `lib/metro.sh` | tmux session `simlane-N`, `/status` probe, `metro_wait_ready` / `metro_wait_free` |
 | `lib/deps.sh`, `lib/app.sh` | dependency strategies (`link` / `install`), app build in the main checkout |
-| `lib/cmd/*.sh` | one subcommand per file: `prepare up down status env metro gc init claude-hook` |
-| `scripts/` | `install.sh` (symlinks), `install-claude-hooks.sh` (Claude Code hooks, idempotent, replaces stale entries) |
-| `skills/simlane/SKILL.md` | the Claude Code skill (symlinked into `~/.claude/skills/simlane` by `install.sh`) |
+| `lib/cmd/*.sh` | one subcommand per file: `prepare up down status env metro gc init setup version claude-hook` |
+| `scripts/` | `install.sh` (contributor install, then `simlane setup`), `release.sh`, `changelog-section.sh`, `check-release.sh`, `update-formula.sh` |
+| `skills/simlane/SKILL.md` | the Claude Code skill (linked into `~/.claude/skills/simlane` by `simlane setup`) |
+| `.github/workflows/` | `ci.yml` (bats, shellcheck, actionlint on macOS bash 3.2), `release.yml` (tag → Release + Homebrew tap) |
 | `tests/` | bats suite; `tests/fakes/` replaces `xcrun`, `tmux`, `curl`, `lsof` and the build command |
 
 ## Conventions
@@ -53,4 +54,6 @@ bats tests/              # whole suite; a single file: bats tests/metro.bats
 
 ## Releasing
 
-Bump `CHANGELOG.md`, commit, `git tag -a vX.Y.Z -m "simlane X.Y.Z"`, push the tag (only when the maintainer asks).
+Add user-visible changes under `## Unreleased` in `CHANGELOG.md` as you go. To release, run `scripts/release.sh X.Y.Z`
+on a clean, pushed `main` (only when the maintainer asks); it tags and pushes, and `release.yml` publishes the GitHub
+Release and updates `ChoiHyeongu/homebrew-tap`. Details and recovery: `CONTRIBUTING.md`.

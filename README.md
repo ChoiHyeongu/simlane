@@ -32,10 +32,15 @@ Tests: `brew install bats-core`, then `bats tests/`.
 ## Install
 
 ```sh
-git clone https://github.com/ChoiHyeongu/simlane.git ~/.local/share/simlane
-~/.local/share/simlane/scripts/install.sh              # ~/bin/simlane, ~/.claude/skills/simlane
-~/.local/share/simlane/scripts/install-claude-hooks.sh # hooks in ~/.claude/settings.json (optional, for Claude Code)
+brew install choihyeongu/tap/simlane
+simlane setup --hooks   # links the Claude Code skill and registers the hooks; omit --hooks for the skill only
 ```
+
+Upgrade with `brew upgrade simlane`; the skill link and the hooks point at Homebrew's `opt/simlane` path and keep
+working. To remove: `brew uninstall simlane`, `rm ~/.claude/skills/simlane`, and delete the `simlane claude-hook`
+entries from `~/.claude/settings.json` (left alone they do nothing).
+
+Working on simlane itself: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Usage
 
@@ -105,7 +110,7 @@ config.resolver = { ...config.resolver, blockList: exclusionList([nestedWorktree
 
 ## Claude Code integration
 
-`scripts/install-claude-hooks.sh` registers `simlane claude-hook` for `SessionStart`, `CwdChanged` and `FileChanged`.
+`simlane setup --hooks` registers `simlane claude-hook` for `SessionStart`, `CwdChanged` and `FileChanged`.
 The hook appends `simlane env` to `CLAUDE_ENV_FILE` and returns `hookSpecificOutput.watchPaths` pointing at the lane
 registry, so the variables refresh when `simlane up` runs mid-session. The skill in `skills/simlane/` tells the agent what
 is provisioning (simlane) and what is interaction (argent), and which shortcuts are forbidden.

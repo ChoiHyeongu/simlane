@@ -6,6 +6,8 @@
 - `simlane setup [--hooks]` links the Claude Code skill and registers the hooks; replaces
   `scripts/install-claude-hooks.sh`. Paths survive `brew upgrade`.
 - Hook registration no longer removes other tools' `claude-hook` entries.
+- Homebrew tap: `brew install choihyeongu/tap/simlane`.
+- CI on macOS bash 3.2 (bats, shellcheck, actionlint) and tag-driven releases.
 
 ## 0.1.0 — 2026-10-03
 
