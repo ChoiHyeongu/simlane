@@ -36,6 +36,9 @@ if git ls-remote --exit-code --tags origin "refs/tags/v$v" >/dev/null 2>&1; then
 echo "release: running tests" >&2
 bash -c "${SIMLANE_RELEASE_TEST_CMD:-bats tests/}" || fail "tests failed"
 
+# From here on files change; a failing command (commit-msg hook, gpg signing, …) must not leave the maintainer stuck.
+trap 'echo "release: failed after modifying files. To undo: git tag -d v$v 2>/dev/null; git reset --hard origin/main" >&2' ERR
+
 # 3. CHANGELOG + VERSION
 today=$(date +%Y-%m-%d)
 awk -v v="$v" -v d="$today" '
@@ -50,6 +53,7 @@ printf '%s\n' "$v" > VERSION
 git add CHANGELOG.md VERSION
 git commit -q -m "chore(release): $v"
 git tag -a "v$v" -m "simlane $v"
+trap - ERR
 
 # 5. confirm, push
 printf 'release: push main and v%s to origin? [y/N] ' "$v" >&2

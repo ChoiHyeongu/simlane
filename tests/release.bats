@@ -63,3 +63,11 @@ clean() { [ -z "$(git -C "$R" status --porcelain)" ]; }
   [ "$(git -C "$O" rev-parse 'v0.2.0^{commit}')" = "$(git -C "$R" rev-parse HEAD)" ]
   [ "$(git -C "$O" cat-file -t v0.2.0)" = "tag" ]
 }
+
+@test "release: a failure after files were rewritten prints how to get back to origin/main" {
+  printf '#!/bin/sh\nexit 1\n' > "$R/.git/hooks/commit-msg"; chmod +x "$R/.git/hooks/commit-msg"
+  run rel y 0.2.0
+  [ "$status" -ne 0 ]; assert_contains "$output" "failed after modifying files"
+  assert_contains "$output" "git reset --hard origin/main"
+  assert_fails git -C "$O" rev-parse -q --verify refs/tags/v0.2.0
+}
