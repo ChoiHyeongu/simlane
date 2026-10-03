@@ -1,0 +1,81 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Tag matches VERSION and CHANGELOG
+        run: scripts/check-release.sh "$GITHUB_REF_NAME"
+      - name: Tag commit is on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+
+  test:
+    needs: verify
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: test
+    runs-on: macos-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.ref_name }}
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_FROM_API: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - name: GitHub Release
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "release $TAG already exists"
+          else
+            scripts/changelog-section.sh "${TAG#v}" > notes.md
+            gh release create "$TAG" --title "simlane ${TAG#v}" --notes-file notes.md
+          fi
+      - name: Tarball sha256
+        id: sha
+        run: |
+          url="https://github.com/${GITHUB_REPOSITORY}/archive/refs/tags/${TAG}.tar.gz"
+          for i in 1 2 3 4 5; do
+            if curl -fsSL "$url" -o src.tar.gz; then break; fi
+            [ "$i" -lt 5 ] || exit 1
+            sleep $((i * 5))
+          done
+          echo "sha256=$(shasum -a 256 src.tar.gz | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v5
+        with:
+          repository: ChoiHyeongu/homebrew-tap
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+          path: tap
+      - name: Update the formula (local commit only)
+        id: formula
+        run: |
+          result=$(scripts/update-formula.sh tap/Formula/simlane.rb "${TAG#v}" "${{ steps.sha.outputs.sha256 }}")
+          echo "result=$result" >> "$GITHUB_OUTPUT"
+          if [ "$result" = updated ]; then
+            git -C tap config user.name "github-actions[bot]"
+            git -C tap config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git -C tap commit -qam "simlane ${TAG#v}"
+          fi
+      - name: brew install and test from the updated tap
+        run: |
+          brew tap choihyeongu/tap "$PWD/tap"
+          brew install choihyeongu/tap/simlane
+          brew test choihyeongu/tap/simlane
+          [ "$(simlane --version)" = "${TAG#v}" ]
+      - name: Push the tap
+        if: steps.formula.outputs.result == 'updated'
+        run: git -C tap push -q origin HEAD
