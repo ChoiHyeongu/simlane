@@ -22,6 +22,17 @@ Known gaps, mostly from the first code review. None blocks normal use.
 - `--native-from-worktree` for worktrees that change native code.
 - Homebrew tap / `curl | bash` installer.
 
+## Setup and release (from the release-pipeline review)
+- `setup --hooks`: the jq merge errors on a matcher group without `hooks`, an object-valued event or a non-string
+  `command` (settings stay intact, but a `.bak` and a temp file are left); it also drops pre-existing empty groups.
+- Stale-hook regex `simlane"? claude-hook`: removes `my-simlane claude-hook` and whole compound commands
+  (`echo x; simlane claude-hook`); misses single-quoted paths. Anchor on a path boundary.
+- `settings.json` is overwritten with `cat tmp > f` (keeps symlinks, not atomic); the first run backs up the fresh `{}`.
+- `simlane setup -h/--help` exits 1 as an unknown argument.
+- `release.yml`: scope `contents: write` to the `publish` job; the tarball sha uses `GITHUB_REPOSITORY` while
+  `update-formula.sh` hard-codes `ChoiHyeongu/simlane`.
+
 ## Tests
+- Symlinked `CLAUDE_SETTINGS` keeps its link after `setup --hooks`; a hook group without a `hooks` key.
 - Integration test with two real `up` processes contending for the build lock.
 - Document fake limitations in `tests/README` (no real `simctl spawn` on unbooted devices, commands are not executed).
